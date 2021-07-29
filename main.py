@@ -1,26 +1,24 @@
-from tools.trainer import TrainerBase
+from tools.train import TrainerBase
 import argparse
 from utils import Config
 import os
 from models import build_detector
+from trainer.trainer import Trainer
+from datasets import build_dataset, build_dataloader
 
 
-
-class Train(TrainerBase):
-    def __init__(self, cfg):
-        super(Train, self).__init__(cfg)
-        # build model
-        self.model = build_detector(cfg.model, train_cfg=cfg.train_cfg, test_cfg=cfg.test_cfg)
-
-
-    def _train_epoch(self):
-        pass
-
-
-    def _val_epoch(self):
-        pass
-
-
+def main(cfg):
+    # build model
+    model = build_detector(cfg.model, train_cfg=cfg.train_cfg, test_cfg=cfg.test_cfg)
+    # build datasets
+    datasets = build_dataset(cfg.data_root)
+    train_loader = build_dataloader()
+    trainer = Trainer(
+        cfg,
+        model,
+        datasets,
+        train_loader=train_loader,
+    )
 
 
 
@@ -34,4 +32,4 @@ if __name__ == "__main__":
     parser.add_argument('--config', default='./config/rretinanet/rretinanet_yolov5s.json', help='train config file path')
     args = parser.parse_args()
     cfg = Config.fromfile(args.config)
-    Train(cfg)
+    main(cfg)
