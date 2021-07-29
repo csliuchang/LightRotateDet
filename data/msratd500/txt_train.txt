@@ -1,0 +1,2 @@
+images/IMG_0849.JPG	labels/IMG_0849.txt
+images/IMG_1687.JPG	labels/IMG_1687.txt
