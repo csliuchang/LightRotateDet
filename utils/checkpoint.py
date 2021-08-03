@@ -4,12 +4,17 @@ import pkgutil
 import time
 import warnings
 from collections import OrderedDict
-from ..version import __version__ as BASE_VERSION
+
+import mmcv.runner
+
 from .path import mkdir_or_exist
 
 import torch
 import torchvision
 import numpy as np
+
+
+BASE_VERSION = '1.0.0'
 
 
 def load_state_dict(module, state_dict, strict=False, logger=None):
@@ -281,3 +286,5 @@ def load_checkpoint(model,
 
     load_state_dict(model, state_dict, strict, logger)
     return checkpoint
+
+

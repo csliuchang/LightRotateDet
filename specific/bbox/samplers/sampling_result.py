@@ -1,6 +1,6 @@
 
 import torch
-from pytorch_networks.base.utils import NiceRepr
+from utils import NiceRepr
 
 from ..assigners import AssignResult
 from ..utils import ensure_rng, random_boxes

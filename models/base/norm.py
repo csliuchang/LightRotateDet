@@ -8,7 +8,7 @@ from torch.nn import SyncBatchNorm
 
 from .norms import *
 from .registry import NORM_LAYERS
-from ...utils import is_tuple_of
+from utils import is_tuple_of
 
 NORM_LAYERS.register_module('BN', module=nn.BatchNorm2d)
 NORM_LAYERS.register_module('BN1d', module=nn.BatchNorm1d)

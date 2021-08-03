@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import torch.distributed as dist
 import torch.nn as nn
-from pytorch_networks.base.utils import get_logger, print_log
+from utils import get_logger, print_log
 
 
 class BaseDetector(nn.Module, metaclass=ABCMeta):
@@ -15,7 +15,7 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
 
     @property
     def with_neck(self):
-        return hasattr(self, 'neck') and self.neck is not None
+        return hasattr(self, 'necks') and self.neck is not None
 
     @property
     def with_bbox(self):

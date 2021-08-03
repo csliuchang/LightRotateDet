@@ -14,6 +14,6 @@ class BaseBBoxCoder(metaclass=ABCMeta):
 
     @abstractmethod
     def decode(self, bboxes, bboxes_pred):
-        """Decode the predicted bboxes according to prediction and base
+        """Decode the predicted bboxes according to prediction and _base
         boxes."""
         pass

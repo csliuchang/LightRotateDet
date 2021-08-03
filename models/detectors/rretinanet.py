@@ -5,7 +5,7 @@ import numpy as np
 from ..builder import DETECTORS, build_backbone, build_head, build_neck
 from .base import BaseDetector
 from ..utils import points2rdets, rdets2points_tensor
-from ...specific.bbox.coder.delta_xywha_bbox_coder import delta2bbox
+from specific.bbox.coder.delta_xywha_bbox_coder import delta2bbox
 
 
 __all__ = ["RRetinaNet"]

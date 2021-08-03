@@ -1,8 +1,8 @@
-from mmcv.utils import Registry, build_from_cfg
+from utils import Registry, build_from_cfg
 from torch import nn
 
 BACKBONES = Registry('backbone')
-NECKS = Registry('neck')
+NECKS = Registry('necks')
 ROI_EXTRACTORS = Registry('roi_extractor')
 SHARED_HEADS = Registry('shared_head')
 HEADS = Registry('head')

@@ -1,6 +1,6 @@
 import collections
 
-from mmcv.utils import build_from_cfg
+from utils import build_from_cfg
 
 from ..builder import PIPELINES
 

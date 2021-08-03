@@ -5,52 +5,58 @@ from collections import abc
 
 
 def build_from_cfg(cfg, registry, default_args=None):
-    """Build a module from config dict.
+    """Build a module from train_utils dict.
 
-    Args:
-        cfg (dict): Config dict. It should at least contain the key "type".
-        registry (:obj:`Registry`): The registry to search the type from.
-        default_args (dict, optional): Default initialization arguments.
+    Parameters
+    ----------
+    cfg : dict
+        Config dict. It should at least contain the key "type".
+    registry : :obj:`Registry`
+        The registry to search the type from.
+    default_args : dict, optional
+        Default initialization arguments.
 
-    Returns:
-        object: The constructed object.
+    Returns
+    -------
+    module_obj : object
+        The constructed object.
+
+    Examples
+    --------
+    >>> BACKBONES = Registry('backbone')
+    >>> def build_backbone(cfg):
+    >>>     build_from_cfg(cfg, BACKBONES, default_args=None)
+    >>> backbone = build_backbone(cfg.model.backbone)
     """
     if not isinstance(cfg, dict):
         raise TypeError(f'cfg must be a dict, but got {type(cfg)}')
     if 'type' not in cfg:
-        if default_args is None or 'type' not in default_args:
-            raise KeyError(
-                '`cfg` or `default_args` must contain the key "type", '
-                f'but got {cfg}\n{default_args}')
+        raise KeyError(
+            f'the cfg dict must contain the key "type", but got {cfg}')
     if not isinstance(registry, Registry):
-        raise TypeError('registry must be an mmcv.Registry object, '
+        raise TypeError('registry must be an Registry object, '
                         f'but got {type(registry)}')
     if not (isinstance(default_args, dict) or default_args is None):
         raise TypeError('default_args must be a dict or None, '
                         f'but got {type(default_args)}')
 
     args = cfg.copy()
+    module_type = args.pop('type')
+    if isinstance(module_type, str):
+        module_obj = registry.get(module_type)
+        if module_obj is None:
+            raise KeyError(
+                f'{module_type} is not in the {registry.name} registry')
+    elif inspect.isclass(module_type):
+        module_obj = module_type
+    else:
+        raise TypeError(
+            f'type must be a str or valid type, but got {type(module_type)}')
 
     if default_args is not None:
         for name, value in default_args.items():
             args.setdefault(name, value)
-
-    obj_type = args.pop('type')
-    if isinstance(obj_type, str):
-        obj_cls = registry.get(obj_type)
-        if obj_cls is None:
-            raise KeyError(
-                f'{obj_type} is not in the {registry.name} registry')
-    elif inspect.isclass(obj_type):
-        obj_cls = obj_type
-    else:
-        raise TypeError(
-            f'type must be a str or valid type, but got {type(obj_type)}')
-    try:
-        return obj_cls(**args)
-    except Exception as e:
-        # Normal TypeError does not print class name.
-        raise type(e)(f'{obj_cls.__name__}: {e}')
+    return module_obj(**args)
 
 
 class Registry:
@@ -58,7 +64,7 @@ class Registry:
 
     Registered object could be built from registry.
     Example:
-        >>> MODELS = Registry('models')
+        >>> MODELS = Registry('retinanet')
         >>> @MODELS.register_module()
         >>> class ResNet:
         >>>     pass
@@ -125,8 +131,8 @@ class Registry:
         The name of the package where registry is defined will be returned.
 
         Example:
-            # in mmdet/models/backbone/resnet.py
-            >>> MODELS = Registry('models')
+            # in mmdet/retinanet/backbone/resnet.py
+            >>> MODELS = Registry('retinanet')
             >>> @MODELS.register_module()
             >>> class ResNet:
             >>>     pass
@@ -215,12 +221,12 @@ class Registry:
         The parent registry could build objects from children registry.
 
         Example:
-            >>> models = Registry('models')
-            >>> mmdet_models = Registry('models', parent=models)
+            >>> retinanet = Registry('retinanet')
+            >>> mmdet_models = Registry('retinanet', parent=retinanet)
             >>> @mmdet_models.register_module()
             >>> class ResNet:
             >>>     pass
-            >>> resnet = models.build(dict(type='mmdet.ResNet'))
+            >>> resnet = retinanet.build(dict(type='mmdet.ResNet'))
         """
 
         assert isinstance(registry, Registry)

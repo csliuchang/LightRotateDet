@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from .registry import UPSAMPLE_LAYERS
-from ..utils import xavier_init
+from models.utils import xavier_init
 
 UPSAMPLE_LAYERS.register_module('nearest', module=nn.Upsample)
 UPSAMPLE_LAYERS.register_module('bilinear', module=nn.Upsample)

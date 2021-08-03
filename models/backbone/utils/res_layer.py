@@ -1,12 +1,12 @@
 from collections import OrderedDict
 from torch import nn as nn
 
-from ...components import (build_activation_layer, build_conv_layer,
+from ...base import (build_activation_layer, build_conv_layer,
                            build_norm_layer, build_plugin_layer,
                            PLUGIN_LAYERS)
 
-from ...components.conv_module import DepthwiseSeparableConvModule, ConvModule
-from ...components.plugins import SELayer
+from ...base.conv_module import DepthwiseSeparableConvModule, ConvModule
+from ...base.plugins import SELayer
 
 class BasicBlock(nn.Module):
     """BasicBlock for ResNet.

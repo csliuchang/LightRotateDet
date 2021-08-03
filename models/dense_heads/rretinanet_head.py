@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import math
 from ..builder import HEADS, build_loss
-from ...specific import build_anchor_generator
+from specific import build_anchor_generator
 from .base_dense_head import BaseDenseHead
 from ..utils import normal_init
 from ..dense_heads import AnchorHead
@@ -10,7 +10,6 @@ from ..utils import get_norm, rbbox2circumhbbox, unmap, ranchor_inside_flags, \
     padding_results, rdets2points, rdets2points_tensor, get_activation, c2_xavier_fill
 import numpy as np
 from ..utils import multiclass_rnms
-from ..criterions import gwd_loss
 
 
 @HEADS.register_module()

@@ -2,17 +2,17 @@ import torch
 import torch.nn as nn
 
 from ..builder import HEADS, build_loss
-from ...specific import build_anchor_generator
+from specific import build_anchor_generator
 from .base_dense_head import BaseDenseHead
 from ..utils import normal_init, multi_apply, images_to_levels
-from ...specific.bbox import build_assigner, build_sampler, build_bbox_coder
+from specific.bbox import build_assigner, build_sampler, build_bbox_coder
 
 
 
 @HEADS.register_module()
 class AnchorHead(BaseDenseHead):
     """
-    Anchor base head (RetinaNet RRetinaNet YOLO F)
+    Anchor _base head (RetinaNet RRetinaNet YOLO F)
     """
 
     def __init__(self, num_classes,

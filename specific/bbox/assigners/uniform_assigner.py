@@ -2,7 +2,7 @@ import torch
 
 from ..builder import BBOX_ASSIGNERS
 from ..iou_calculators import build_iou_calculator
-from pytorch_networks.det.models.utils import box_xyxy_to_cxcywh
+from models.utils import box_xyxy_to_cxcywh
 from .assign_result import AssignResult
 from .base_assigner import BaseAssigner
 

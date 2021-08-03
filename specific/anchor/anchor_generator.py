@@ -2,7 +2,6 @@ import numpy as np
 import torch
 from torch.nn.modules.utils import _pair
 
-from pytorch_networks.base.utils import is_tuple_of
 from .builder import ANCHOR_GENERATORS
 import torch.nn as nn
 import collections
@@ -33,10 +32,10 @@ class AnchorGenerator(object):
         (If strides are non square, the shortest stride is taken.)
     scale_major : bool
         Whether to multiply scales first when generating
-        base anchors. If true, the anchors in the same row will have the
+        _base anchors. If true, the anchors in the same row will have the
         same scales. By default it is True in V2.0
     octave_base_scale : int
-        The base scale of octave.
+        The _base scale of octave.
     scales_per_octave : int
         Number of scales for each octave.
         `octave_base_scale` and `scales_per_octave` are usually used in
@@ -96,7 +95,7 @@ class AnchorGenerator(object):
         self.base_sizes = [min(stride) for stride in self.strides
                            ] if base_sizes is None else base_sizes
         # assert len(self.base_sizes) == len(self.strides), \
-        #     'The number of strides should be the same as base sizes, got ' \
+        #     'The number of strides should be the same as _base sizes, got ' \
         #     f'{self.strides} and {self.base_sizes}'
 
         assert ((octave_base_scale is not None
@@ -125,7 +124,7 @@ class AnchorGenerator(object):
 
     @property
     def num_base_anchors(self):
-        """list[int]: total number of base anchors in a feature grid"""
+        """list[int]: total number of _base anchors in a feature grid"""
         return [base_anchors.size(0) for base_anchors in self.base_anchors]
 
     @property
@@ -134,7 +133,7 @@ class AnchorGenerator(object):
         return len(self.strides)
 
     def gen_base_anchors(self):
-        """Generate base anchors.
+        """Generate _base anchors.
 
         Returns
         -------
@@ -167,7 +166,7 @@ class AnchorGenerator(object):
                                       base_size,
                                       center=None):
         """
-        Generate base anchors by auto anchor
+        Generate _base anchors by auto anchor
         base_size : (int | float, int | float)
                     Basic size of an anchor.
         """
@@ -194,7 +193,7 @@ class AnchorGenerator(object):
                                       scales,
                                       ratios,
                                       center=None):
-        """Generate base anchors of a single level.
+        """Generate _base anchors of a single level.
 
         Parameters
         ----------
@@ -206,7 +205,7 @@ class AnchorGenerator(object):
             The ratio between between the height
             and width of anchors in a single level.
         center : tuple[float], optional
-            The center of the base anchor
+            The center of the _base anchor
             related to a single feature grid. Defaults to None.
 
         Returns
@@ -309,7 +308,7 @@ class AnchorGenerator(object):
         Parameters
         ----------
         base_anchors : torch.Tensor
-            The base anchors of a feature grid.
+            The _base anchors of a feature grid.
         featmap_size : tuple[int]
             Size of the feature maps.
         stride : tuple[int], optional
@@ -385,7 +384,7 @@ class AnchorGenerator(object):
         valid_size : tuple[int]
             The valid size of the feature maps.
         num_base_anchors : int
-            The number of base anchors.
+            The number of _base anchors.
         device : str, optional
             Device where the flags will be put on.
             Defaults to 'cuda'.
@@ -425,288 +424,6 @@ class AnchorGenerator(object):
         repr_str += f'{indent_str}centers={self.centers},\n'
         repr_str += f'{indent_str}center_offset={self.center_offset})'
         return repr_str
-
-
-@ANCHOR_GENERATORS.register_module()
-class SSDAnchorGenerator(AnchorGenerator):
-    """Anchor generator for SSD.
-
-    Parameters
-    ----------
-    strides : list[int]  | list[tuple[int, int]]
-        Strides of anchors
-        in multiple feature levels.
-    ratios : list[float]
-        The list of ratios between the height and width
-        of anchors in a single level.
-    basesize_ratio_range : tuple(float)
-        Ratio range of anchors.
-    input_size : int
-        Size of feature map, 300 for SSD300,
-        512 for SSD512.
-    scale_major : bool
-        Whether to multiply scales first when generating
-        base anchors. If true, the anchors in the same row will have the
-        same scales. It is always set to be False in SSD.
-    """
-
-    def __init__(self,
-                 strides,
-                 ratios,
-                 basesize_ratio_range,
-                 input_size=300,
-                 scale_major=True):
-        assert len(strides) == len(ratios)
-        assert is_tuple_of(basesize_ratio_range, float)
-
-        self.strides = [_pair(stride) for stride in strides]
-        self.input_size = input_size
-        self.centers = [(stride[0] / 2., stride[1] / 2.)
-                        for stride in self.strides]
-        self.basesize_ratio_range = basesize_ratio_range
-
-        min_ratio, max_ratio = basesize_ratio_range
-        min_ratio = int(min_ratio * 100)
-        max_ratio = int(max_ratio * 100)
-        step = int(np.floor(max_ratio - min_ratio) / (self.num_levels - 2))
-        min_sizes = []
-        max_sizes = []
-        for ratio in range(int(min_ratio), int(max_ratio) + 1, step):
-            min_sizes.append(int(self.input_size * ratio / 100))
-            max_sizes.append(int(self.input_size * (ratio + step) / 100))
-        if self.input_size == 300:
-            if basesize_ratio_range[0] == 0.15:  # SSD300 COCO
-                min_sizes.insert(0, int(self.input_size * 7 / 100))
-                max_sizes.insert(0, int(self.input_size * 15 / 100))
-            elif basesize_ratio_range[0] == 0.2:  # SSD300 VOC
-                min_sizes.insert(0, int(self.input_size * 10 / 100))
-                max_sizes.insert(0, int(self.input_size * 20 / 100))
-            else:
-                raise ValueError(
-                    'basesize_ratio_range[0] should be either 0.15'
-                    'or 0.2 when input_size is 300, got '
-                    f'{basesize_ratio_range[0]}.')
-        elif self.input_size == 512:
-            if basesize_ratio_range[0] == 0.1:  # SSD512 COCO
-                min_sizes.insert(0, int(self.input_size * 4 / 100))
-                max_sizes.insert(0, int(self.input_size * 10 / 100))
-            elif basesize_ratio_range[0] == 0.15:  # SSD512 VOC
-                min_sizes.insert(0, int(self.input_size * 7 / 100))
-                max_sizes.insert(0, int(self.input_size * 15 / 100))
-            else:
-                raise ValueError('basesize_ratio_range[0] should be either 0.1'
-                                 'or 0.15 when input_size is 512, got'
-                                 ' {basesize_ratio_range[0]}.')
-        else:
-            raise ValueError('Only support 300 or 512 in SSDAnchorGenerator'
-                             f', got {self.input_size}.')
-
-        anchor_ratios = []
-        anchor_scales = []
-        for k in range(len(self.strides)):
-            scales = [1., np.sqrt(max_sizes[k] / min_sizes[k])]
-            anchor_ratio = [1.]
-            for r in ratios[k]:
-                anchor_ratio += [1 / r, r]  # 4 or 6 ratio
-            anchor_ratios.append(torch.Tensor(anchor_ratio))
-            anchor_scales.append(torch.Tensor(scales))
-
-        self.base_sizes = min_sizes
-        self.scales = anchor_scales
-        self.ratios = anchor_ratios
-        self.scale_major = scale_major
-        self.center_offset = 0
-        self.base_anchors = self.gen_base_anchors()
-
-    def gen_base_anchors(self):
-        """Generate base anchors.
-
-        Returns
-        -------
-        list : torch.Tensor
-            Base anchors of a feature grid in multiple
-            feature levels.
-        """
-        multi_level_base_anchors = []
-        for i, base_size in enumerate(self.base_sizes):
-            base_anchors = self.gen_single_level_base_anchors(
-                base_size,
-                scales=self.scales[i],
-                ratios=self.ratios[i],
-                center=self.centers[i])
-            indices = list(range(len(self.ratios[i])))
-            indices.insert(1, len(indices))
-            base_anchors = torch.index_select(base_anchors, 0,
-                                              torch.LongTensor(indices))
-            multi_level_base_anchors.append(base_anchors)
-        return multi_level_base_anchors
-
-    def __repr__(self):
-        """str: a string that describes the module"""
-        indent_str = '    '
-        repr_str = self.__class__.__name__ + '(\n'
-        repr_str += f'{indent_str}strides={self.strides},\n'
-        repr_str += f'{indent_str}scales={self.scales},\n'
-        repr_str += f'{indent_str}scale_major={self.scale_major},\n'
-        repr_str += f'{indent_str}input_size={self.input_size},\n'
-        repr_str += f'{indent_str}scales={self.scales},\n'
-        repr_str += f'{indent_str}ratios={self.ratios},\n'
-        repr_str += f'{indent_str}num_levels={self.num_levels},\n'
-        repr_str += f'{indent_str}base_sizes={self.base_sizes},\n'
-        repr_str += f'{indent_str}basesize_ratio_range='
-        repr_str += f'{self.basesize_ratio_range})'
-        return repr_str
-
-
-@ANCHOR_GENERATORS.register_module()
-class YOLOAnchorGenerator(AnchorGenerator):
-    """Anchor generator for YOLO.
-
-    Parameters
-    ----------
-    strides : list[int] | list[tuple[int, int]]
-        Strides of anchors in multiple feature levels.
-    base_sizes : list[list[tuple[int, int]]]
-        The basic sizes of anchors in multiple levels.
-    """
-
-    def __init__(self, strides, base_sizes):
-        self.strides = [_pair(stride) for stride in strides]
-        self.centers = [(stride[0] / 2., stride[1] / 2.)
-                        for stride in self.strides]
-        self.base_sizes = []
-        num_anchor_per_level = len(base_sizes[0])
-        for base_sizes_per_level in base_sizes:
-            assert num_anchor_per_level == len(base_sizes_per_level)
-            self.base_sizes.append(
-                [_pair(base_size) for base_size in base_sizes_per_level])
-        self.base_anchors = self.gen_base_anchors()
-
-    @property
-    def num_levels(self):
-        """int: number of feature levels that the generator will be applied"""
-        return len(self.base_sizes)
-
-    def gen_base_anchors(self):
-        """Generate base anchors.
-
-        Returns
-        -------
-        list : torch.Tensor
-            Base anchors of a feature grid in multiple feature levels.
-        """
-        multi_level_base_anchors = []
-        for i, base_sizes_per_level in enumerate(self.base_sizes):
-            center = None
-            if self.centers is not None:
-                center = self.centers[i]
-            multi_level_base_anchors.append(
-                self.gen_single_level_base_anchors(base_sizes_per_level,
-                                                   center))
-        return multi_level_base_anchors
-
-    def gen_single_level_base_anchors(self, base_sizes_per_level, center=None):
-        """Generate base anchors of a single level.
-
-        Parameters
-        ----------
-        base_sizes_per_level : list[tuple[int, int]]
-            Basic sizes of anchors.
-        center : tuple[float], optional
-            The center of the base anchor related to a single feature grid.
-            Defaults to None.
-
-        Returns
-        -------
-        torch.Tensor
-            Anchors in a single-level feature maps.
-        """
-        x_center, y_center = center
-        base_anchors = []
-        for base_size in base_sizes_per_level:
-            w, h = base_size
-
-            base_anchor = torch.Tensor([
-                x_center - 0.5 * w, y_center - 0.5 * h, x_center + 0.5 * w,
-                y_center + 0.5 * h
-            ])
-            base_anchors.append(base_anchor)
-        base_anchors = torch.stack(base_anchors, dim=0)
-
-        return base_anchors
-
-    def responsible_flags(self, featmap_sizes, gt_bboxes, device='cuda'):
-        """Generate responsible anchor flags of grid cells in multiple scales.
-
-        Parameters
-        ----------
-        featmap_sizes : list(tuple)
-            List of feature map sizes in multiple
-            feature levels.
-        gt_bboxes : Tensor
-            Ground truth boxes, shape (n, 4).
-        device : str
-            Device where the anchors will be put on.
-
-        Returns
-        -------
-        list : torch.Tensor
-            responsible flags of anchors in multiple level
-        """
-        assert self.num_levels == len(featmap_sizes)
-        multi_level_responsible_flags = []
-        for i in range(self.num_levels):
-            anchor_stride = self.strides[i]
-            flags = self.single_level_responsible_flags(
-                featmap_sizes[i],
-                gt_bboxes,
-                anchor_stride,
-                self.num_base_anchors[i],
-                device=device)
-            multi_level_responsible_flags.append(flags)
-        return multi_level_responsible_flags
-
-    def single_level_responsible_flags(self,
-                                       featmap_size,
-                                       gt_bboxes,
-                                       stride,
-                                       num_base_anchors,
-                                       device='cuda'):
-        """Generate the responsible flags of anchor in a single feature map.
-
-        Parameters
-        ----------
-        featmap_size : tuple[int]
-            The size of feature maps.
-        gt_bboxes : Tensor
-            Ground truth boxes, shape (n, 4).
-        stride : tuple(int)
-            stride of current level
-        num_base_anchors : int
-            The number of base anchors.
-        device : str, optional
-            Device where the flags will be put on. Defaults to 'cuda'.
-
-        Returns
-        -------
-        torch.Tensor
-            The valid flags of each anchor in a single level feature map.
-        """
-        feat_h, feat_w = featmap_size
-        gt_bboxes_cx = ((gt_bboxes[:, 0] + gt_bboxes[:, 2]) * 0.5).to(device)
-        gt_bboxes_cy = ((gt_bboxes[:, 1] + gt_bboxes[:, 3]) * 0.5).to(device)
-        gt_bboxes_grid_x = torch.floor(gt_bboxes_cx / stride[0]).long()
-        gt_bboxes_grid_y = torch.floor(gt_bboxes_cy / stride[1]).long()
-
-        gt_bboxes_grid_idx = gt_bboxes_grid_y * feat_w + gt_bboxes_grid_x
-
-        responsible_grid = torch.zeros(
-            feat_h * feat_w, dtype=torch.uint8, device=device)
-        responsible_grid[gt_bboxes_grid_idx] = 1
-
-        responsible_grid = responsible_grid[:, None].expand(
-            responsible_grid.size(0), num_base_anchors).contiguous().view(-1)
-        return responsible_grid
 
 
 class BufferList(nn.Module):
@@ -833,7 +550,7 @@ class DefaultAnchorGenerator(nn.Module):
                 ratios and 5 sizes, the number of anchors is 15.
                 (See also ANCHOR_GENERATOR.SIZES and ANCHOR_GENERATOR.ASPECT_RATIOS in config)
 
-                In standard RPN models, `num_anchors` on every feature map is the same.
+                In standard RPN retinanet, `num_anchors` on every feature map is the same.
         """
         return [len(cell_anchors) for cell_anchors in self.cell_anchors]
 

@@ -1,1 +1,1 @@
-from group_sampler import GroupSampler
+from .group_sampler import GroupSampler

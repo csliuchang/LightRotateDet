@@ -1,12 +1,16 @@
-from base_dataset import BaseDataset
+import cv2
+
+from .base_dataset import BaseDataset
 import os
 import numpy as np
+from .builder import DATASETS
 
 
 CLASS = ('text', )
 COLOR = [(204, 78, 210)]
 
 
+@DATASETS.register_module()
 class MSRATD500(BaseDataset):
     def __init__(self, *args, **kwargs):
         self.category = CLASS
@@ -15,6 +19,9 @@ class MSRATD500(BaseDataset):
         self.cls_map = {c: i for i, c in enumerate(self.category)}
         super(MSRATD500, self).__init__(*args, **kwargs)
 
+
+    def _set_group_flag(self):
+        self.flag = np.zeros(len(self), dtype=np.uint8)
 
     def load_annotations(self, ann_file):
         data_infos = []
@@ -46,6 +53,8 @@ class MSRATD500(BaseDataset):
             )
             data_infos.append(data_info)
         return data_infos
+
+
 
 
 

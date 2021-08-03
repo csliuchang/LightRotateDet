@@ -25,9 +25,9 @@ class RAnchorGenerator(AnchorGenerator):
             If None is given, strides will be used as base_sizes.
             (If strides are non square, the shortest stride is taken.)
         scale_major (bool): Whether to multiply scales first when generating
-            base anchors. If true, the anchors in the same row will have the
+            _base anchors. If true, the anchors in the same row will have the
             same scales. By default it is True in V2.0
-        octave_base_scale (int): The base scale of octave.
+        octave_base_scale (int): The _base scale of octave.
         scales_per_octave (int): Number of scales for each octave.
             `octave_base_scale` and `scales_per_octave` are usually used in
             retinanet and the `scales` should be None when they are set.

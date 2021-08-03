@@ -2,7 +2,7 @@ import torch.nn as nn
 
 from ..conv_module import ConvModule
 from ..registry import PLUGIN_LAYERS
-from ...backbones.utils import is_seq_of
+from utils import is_seq_of
 
 
 @PLUGIN_LAYERS.register_module()

@@ -1,6 +1,6 @@
 import torch
 
-from pytorch_networks.base.utils import NiceRepr
+from utils import NiceRepr
 
 from ..utils import ensure_rng
 

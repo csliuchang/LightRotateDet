@@ -1,1 +1,1 @@
-from train import TrainerBase
+from .runner import BaseRunner

@@ -7,9 +7,9 @@ import shutil
 import sys
 import tempfile
 
+from .misc import update_value_of_dict, repalce_kwargs_in_dict
 
-
-BASE_KEY = '_base_'
+BASE_KEY = '_base'
 OVERWRITE_KEY = '_overwrite_'
 RESERVED_KEYS = ['filename', 'text']
 
@@ -262,32 +262,9 @@ class Config:
         return self._text
 
 
-def update_value_of_dict(_dict, old_value, new_value):
-    if not isinstance(_dict, dict):
-        return
-    tmp = _dict
-    for k, v in tmp.items():
-        if isinstance(v, str) and v == old_value:
-            _dict[k] = new_value
-        else:
-            if isinstance(v, dict):
-                update_value_of_dict(_dict[k], old_value, new_value)
-            elif isinstance(v, list):
-                for _item in v:
-                    update_value_of_dict(_item, old_value, new_value)
-
-
-def repalce_kwargs_in_dict(_dict):
-    if not isinstance(_dict, dict):
-        return
-    _items = _dict.copy().items()
-    for k, v in _items:
-        if 'kwargs' == k:
-            _kwargs = _dict.pop('kwargs')
-            _dict.update(_kwargs)
-        else:
-            if isinstance(v, dict):
-                repalce_kwargs_in_dict(_dict[k])
-            elif isinstance(v, list):
-                for _item in v:
-                    repalce_kwargs_in_dict(_item)
+def parse_config(config: dict) -> dict:
+    import anyconfig
+    base_file_list = config.pop('_base')
+    tmp_config = Config.fromjson(base_file_list)
+    anyconfig.merge(config, tmp_config)
+    return config

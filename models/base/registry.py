@@ -1,4 +1,4 @@
-from ...utils import Registry
+from utils import Registry
 
 BLOCK_LAYERS = Registry('block_layer')
 CONV_LAYERS = Registry('conv_layer')

@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from torch.nn import Conv2d, Module, Linear, BatchNorm2d, ReLU
 from torch.nn.modules.utils import _pair
 
-from ...components import PLUGIN_LAYERS, build_activation_layer, build_norm_layer
+from ...base import PLUGIN_LAYERS, build_activation_layer, build_norm_layer
 
 __all__ = ['SplAtConv2d', 'rSoftMax']
 

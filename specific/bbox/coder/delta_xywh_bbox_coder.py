@@ -94,7 +94,7 @@ def bbox2delta(proposals, gt, means=(0., 0., 0., 0.), stds=(1., 1., 1., 1.)):
     proposals : Tensor
         Boxes to be transformed, shape (N, ..., 4)
     gt : Tensor
-        Gt bboxes to be used as base, shape (N, ..., 4)
+        Gt bboxes to be used as _base, shape (N, ..., 4)
     means : Sequence[float]
         Denormalizing means for delta coordinates
     stds : Sequence[float]
@@ -138,7 +138,7 @@ def delta2bbox(rois,
                stds=(1., 1., 1., 1.),
                max_shape=None,
                wh_ratio_clip=16 / 1000):
-    """Apply deltas to shift/scale base boxes.
+    """Apply deltas to shift/scale _base boxes.
 
     Typically the rois are anchor or proposed bounding boxes and the deltas are
     network outputs used to shift/scale those boxes.

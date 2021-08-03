@@ -5,10 +5,10 @@ import torch.utils.checkpoint as cp
 from ..builder import BACKBONES
 from ..base import (build_activation_layer, build_conv_layer,
                           build_norm_layer, ConvModule, _BatchNorm)
-from ...utils import load_checkpoint
+from utils import load_checkpoint
 from .utils import BasicBlock, Bottleneck, ResLayer
 from models.utils import constant_init, kaiming_init
-from ...utils import get_logger
+from utils import get_logger
 
 
 def get_expansion(block, expansion=None):
@@ -64,7 +64,7 @@ class ResNet(nn.Module):
     stem_width : int
         Output channels of the first and second stem layers. Default: 32.
     base_channels : int
-        Number of base channels of res layer. Default: 64.
+        Number of _base channels of res layer. Default: 64.
     num_stages : int
         Stages of the network. Default: 4.
     strides : Sequence[int]
@@ -124,7 +124,7 @@ class ResNet(nn.Module):
 
     Examples
     --------
-    >>> from base.cnn import ResNet
+    >>> from _base.cnn import ResNet
     >>> import torch
     >>> self = ResNet(depth=18)
     >>> self.eval()

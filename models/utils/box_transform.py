@@ -299,6 +299,9 @@ def quad_2_rbox(quads, mode='xywha'):
 
 
 def points2rdets(bboxes):
+    # add bbox is [] return
+    if not bboxes.any():
+        return np.array([] * 5, dtype=np.float32).reshape(-1, 5)
     rbboxes = []
     for bbox in bboxes:
         bboxps = np.array(bbox).reshape(

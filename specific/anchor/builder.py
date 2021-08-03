@@ -1,4 +1,4 @@
-from pytorch_networks.base.utils import Registry, build_from_cfg
+from utils import Registry, build_from_cfg
 
 ANCHOR_GENERATORS = Registry('Anchor generator')
 

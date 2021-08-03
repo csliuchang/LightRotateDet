@@ -37,7 +37,7 @@ class CSP_Bottlenck(nn.Module):
 
     The main purpose of designing CSPNet is to enable this architecture to achieve
     a richer gradient combination while reducing the amount of computation. This
-    aim is achieved by partitioning feature map of the base layer into two parts
+    aim is achieved by partitioning feature map of the _base layer into two parts
     and then merging them through a proposed crossstage hierarchy
 
     reference https://github.com/WongKinYiu/CrossStagePartialNetworks

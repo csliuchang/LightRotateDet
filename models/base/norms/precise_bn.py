@@ -76,7 +76,7 @@ def update_bn_stats(
     1. This function will not alter the training mode of the given model.
         Users are responsible for setting the layers that needs
         precise-BN to training mode, prior to calling this function.
-    2. Be careful if your models contain other stateful layers in
+    2. Be careful if your retinanet contain other stateful layers in
         addition to BN, i.e. layers whose state can change in forward
         iterations. This function will alter their state. If you wish
         them unchanged, you need to either pass in a submodule without

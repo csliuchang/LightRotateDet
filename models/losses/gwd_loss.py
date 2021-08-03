@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch
 from torch.autograd import Variable
-from .utils import weighted_loss, weight_reduce_loss
+from .weight_loss import weighted_loss, weight_reduce_loss
 from ..builder import LOSSES
 
 
