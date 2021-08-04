@@ -2,6 +2,7 @@
     "_base": ["/home/pupa/PycharmProjects/LightRotateDet/config/rretinanet/models/rretinanet.json",
               "/home/pupa/PycharmProjects/LightRotateDet/config/rretinanet/models/rretinanet_yolov5_backbone.json"],
     "log_level": "INFO",
+    "network_type": "rotate_detection",
     "dataset": {
             "type":  "MSRATD500",
             "data_root": "/home/pupa/PycharmProjects/LightRotateDet/data/msratd500",

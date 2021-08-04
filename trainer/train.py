@@ -1,7 +1,7 @@
 import torch
 
 from tools import BaseRunner
-from utils import get_root_logger, save_checkpoint, mkdir_or_exist
+from utils import get_root_logger, save_checkpoint, mkdir_or_exist, tensor_to_device
 import time
 import numpy as np
 import os.path as osp
@@ -14,7 +14,8 @@ from utils.metrics import RotateDetEval
 class Train(BaseRunner):
     def __init__(self, *args, **kwargs):
         super(Train, self).__init__(*args, **kwargs)
-        self.eval_method = RotateDetEval()
+        if self.network_type == "rotate_detection":
+            self.eval_method = RotateDetEval()
 
     def _train_epoch(self, epoch):
         self.logger = get_root_logger(log_level='INFO')
@@ -28,12 +29,10 @@ class Train(BaseRunner):
                 break
             self.global_step += 1
 
-            for key, value in data.items():
-                if value is not None:
-                    if isinstance(value, torch.Tensor):
-                        data[key] = value.to(self.device)
-            _img, _ground_truth = data['img'], data['ground_truth']
-            cur_batch = _img.size()[0]
+            tensor_to_device(data, self.device)
+
+            _img, _ground_truth = data['images_collect']['img'], data['ground_truth']
+            batch = _img.shape[0]
             predict, losses = self.model(_img, ground_truth=_ground_truth, return_metrics=True)
             losses = losses["loss"]
             losses.backward()
@@ -44,8 +43,8 @@ class Train(BaseRunner):
             all_losses.append(losses)
             if self.global_step % self.log_iter == 0:
                 batch_time = time.time() - batch_start
-                self.logger.info('[%d/%d], training step: %d, running loss: %f, time: %d ms' % (
-                    epoch, self.epochs, self.global_step, np.array(all_losses).mean(), batch_time * 1000))
+                self.logger.info('[%d/%d], [%d/%d], training step: %d, running loss: %f, time: %d ms' % (
+                    epoch, self.epochs, (count+1)*batch, len(self.train_dataloader.dataset), self.global_step, np.array(all_losses).mean(), batch_time * 1000))
                 batch_start = time.time()
             if self.save_train_metrics_log:
                 pass
@@ -91,19 +90,18 @@ class Train(BaseRunner):
         total_time = 0.0
         for i, data in tqdm(enumerate(self.val_dataloader), total=len(self.val_dataloader), desc='test model'):
             with torch.no_grad():
-                for key, value in data.items():
-                    if value is not None:
-                        if isinstance(value, torch.Tensor):
-                            data[key] = value.to(self.device)
+                tensor_to_device(data, self.device)
             start_time = time.time()
-            _img, ground_truth = data['img'], data['ground_truth']
+            _img, ground_truth = data['images_collect']['img'], data['ground_truth']
             total_time += time.time() - start_time
             cur_batch = _img.shape[0]
             total_frame += cur_batch
             predicts = self.model(_img)
             for i in range(cur_batch):
-                predict_gt_collection = combine_predicts_gt(predicts, ground_truth)
+                predict_gt_collection = combine_predicts_gt(predicts[i], data['images_collect']['img_metas'][i],
+                                                            [ground_truth[key][i] for key in ground_truth])
                 final_collection.append(predict_gt_collection)
         metric = self.eval_method(final_collection)
         self.logger.info(f'FPS:{total_frame / total_time}')
         return metric
+

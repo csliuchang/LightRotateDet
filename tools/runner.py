@@ -6,9 +6,8 @@ from engine.optimizer import build_optimizer
 from tqdm import tqdm
 
 
-
 class BaseRunner:
-    def __init__(self, cfg, datasets, model, meta, distributed=True):
+    def __init__(self, cfg, datasets, model, meta, distributed=False):
         # get config
         self.config = cfg
         self.distributed = distributed
@@ -16,6 +15,7 @@ class BaseRunner:
         self.global_step = 0
         self.epochs = cfg.total_epochs
         self.log_iter = cfg.log_iter
+        self.network_type = cfg.network_type
         # set device
         torch.manual_seed(meta['seed'])  # set seed for cpu
         if torch.cuda.device_count() > 0 and torch.cuda.is_available():
@@ -23,20 +23,20 @@ class BaseRunner:
             self.device = torch.device("cuda")
             torch.cuda.manual_seed(meta['seed'])
             torch.cuda.manual_seed_all(meta['seed'])
-
+        if len(datasets) == 2:
+            train_dataset, val_dataset = datasets
+        else:
+            train_dataset = datasets
+            val_dataset = None
         self.model = model.to(self.device)
         # get datasets dataloader
-        self.data_loaders = [
-            build_dataloader(
-                ds,
-                cfg.dataloader.samples_per_gpu,
-                cfg.dataloader.workers_per_gpu,
-                len(cfg.gpu_ids),
-                dist=distributed,
-                seed=cfg.seed
-            ) for ds in datasets
-        ]
-        self.train_dataloader, self.val_dataloader = self.data_loaders
+        self.train_dataloader = build_dataloader(train_dataset, cfg.dataloader.samples_per_gpu,
+                                                 cfg.dataloader.workers_per_gpu,
+                                                 len(cfg.gpu_ids), dist=distributed, seed=cfg.seed)
+        self.val_dataloader = build_dataloader(val_dataset, 1, cfg.dataloader.workers_per_gpu, len(cfg.gpu_ids),
+                                               dist=distributed,
+                                               seed=cfg.seed
+                                               )
         #  build optimizer scheduler
         self.optimizer = build_optimizer(cfg, model)
         self.scheduler = self._initialize('lr_scheduler', torch.optim.lr_scheduler, self.optimizer)
@@ -55,10 +55,9 @@ class BaseRunner:
             if self.distributed:
                 pass
             ret_results = self._train_epoch(epoch)
-            print('-'*15 + f"Finish {ret_results['epoch']} epoch training" + '-'*15)
+            print('-' * 15 + f"Finish {ret_results['epoch']} epoch training" + '-' * 15)
             self._after_epoch(ret_results)
         self._after_train()
-
 
     def _train_epoch(self, epoch):
         """
@@ -66,20 +65,17 @@ class BaseRunner:
         """
         raise NotImplementedError
 
-
     def _eval(self, epoch):
         """
         eval logic for an epoch
         """
         raise NotImplementedError
 
-
     def _after_epoch(self, results):
         pass
 
     def _after_train(self):
         raise NotImplementedError
-
 
     def _initialize(self, name, module, *args, **kwargs):
         module_name = self.config[name]['type']

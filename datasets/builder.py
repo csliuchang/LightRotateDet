@@ -88,15 +88,19 @@ def collate(batch, samples_per_gpu=1):
     A batch collator that does nothing.
     """
     images =[]
+    img_metas = []
     gt_bboxes = []
     gt_labels = []
     gt_masks = []
     for sample in batch:
         image = sample['img']
+        img_meta = sample['img_metas']
         images.append(image)
+        img_metas.append(img_meta)
         gt_bboxes.append(sample['gt_bboxes'])
         gt_labels.append(sample['gt_labels'])
         gt_masks.append(sample['gt_labels'])
     images = torch.stack(images, dim=0)
+    images_collect = dict(img=images, img_metas=img_metas)
     ground_truth = dict(gt_bboxes=gt_bboxes, gt_labels=gt_labels, gt_masks=gt_masks)
-    return dict(img=images, ground_truth=ground_truth)
+    return dict(images_collect=images_collect, ground_truth=ground_truth)

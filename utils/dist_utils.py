@@ -26,3 +26,12 @@ def get_dist_info():
 
 def get_host_info():
     return f'{getuser()}@{gethostname()}'
+
+
+def tensor_to_device(data, device):
+    for key, value in data.items():
+        if value is not None:
+            if isinstance(value, torch.Tensor):
+                data[key] = value.to(device)
+            elif isinstance(value, dict):
+                tensor_to_device(value, device)
